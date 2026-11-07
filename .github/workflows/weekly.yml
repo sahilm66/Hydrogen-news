@@ -1,0 +1,61 @@
+# weekly.yml - runs your hydrogen news agent automatically, every week,
+# for free, on GitHub's computers (called "GitHub Actions").
+#
+# This file must live at exactly this path in your repo:
+#     .github/workflows/weekly.yml
+#
+# How it works: GitHub reads every file in .github/workflows/ and follows
+# the instructions inside. No server, no laptop left on - GitHub does it.
+
+name: Weekly hydrogen news digest
+
+on:
+  schedule:
+    # When to run, in UTC as "minute hour day-of-month month day-of-week".
+    # "30 2 * * 1" = 02:30 UTC every Monday = 8:00 AM in India (IST).
+    # GitHub can run a few minutes late - that is normal.
+    - cron: "30 2 * * 1"
+  workflow_dispatch:
+    # This adds a "Run workflow" button in the Actions tab, so you can
+    # start a run by hand any time (great for testing).
+
+permissions:
+  contents: write   # lets the run save the new digest files back to your repo
+
+jobs:
+  digest:
+    runs-on: ubuntu-latest   # a fresh Linux computer GitHub lends you
+
+    steps:
+      # 1. Download your repo's files onto that computer.
+      - name: Check out the repo
+        uses: actions/checkout@v4
+
+      # 2. Install Python.
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # 3. Install the one library the scripts need.
+      - name: Install requests
+        run: pip install requests
+
+      # 4. Run the agent. GEMINI_API_KEY comes from your repo Secrets
+      #    (Settings -> Secrets and variables -> Actions). It is never
+      #    printed or saved in the code.
+      - name: Run the weekly agent
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: python agent.py
+
+      # 5. Save the new digest (and the tracker's memory files) back into
+      #    the repo, so you can read them on GitHub. If nothing changed,
+      #    the "||" part runs instead and nothing breaks.
+      - name: Save the digest back to the repo
+        run: |
+          git config user.name "hydrogen-news-bot"
+          git config user.email "bot@users.noreply.github.com"
+          git add digest-*.md latest_run.json seen_articles.json
+          git commit -m "Weekly digest - $(date +%Y-%m-%d)" || echo "Nothing new this week."
+          git push
