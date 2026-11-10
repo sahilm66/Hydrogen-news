@@ -35,7 +35,7 @@ import requests
 #   "two words"  = exact phrase
 #   OR           = any of these
 #   sourcecountry:IN = only articles from Indian news sites
-SEARCH_QUERY = '"green hydrogen" (policy OR subsidy OR subsidies OR tender OR MNRE OR mission) sourcecountry:IN'
+SEARCH_QUERY = '"hydrogen" (policy OR subsidy OR subsidies OR tender OR MNRE OR mission) sourcecountry:IN'
 
 GDELT_URL = "https://api.gdeltproject.org/api/v2/doc/doc"
 
