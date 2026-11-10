@@ -188,17 +188,23 @@ def main():
         print("Try widening SEARCH_QUERY or running again later.")
         return
 
+    print("GDELT returned", len(articles))
+
     seen = load_seen_urls()
     fresh = []
+    skipped_seen = 0
+    skipped_offtopic = 0
     for article in articles:
-        url = article.get("url", "")
-        if url and url not in seen and is_relevant(article):
-            fresh.append(article)
-
-    if not fresh:
-        print(f"Nothing new - you have already seen all {len(articles)} matching articles.")
-        save_latest_run([])   # phase 2 will see an empty list and say so
-        return
+        url = article.get("url","")
+        if not url or url in seen:
+            skipped_seen += 1
+            continue
+        if not is_relevant(article):
+            skipped_offtopic += 1
+            continue
+        fresh.append(article)
+    
+    print("skipped as seen:", skipped_seen, "| off-topic:", skipped_offtopic, "| kept:", len(fresh))
 
     # Hand the new articles to phase 2 (digest_news.py reads this file).
     save_latest_run(fresh)
